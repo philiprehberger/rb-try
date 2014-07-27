@@ -52,8 +52,8 @@ module Philiprehberger
         self
       end
 
-      def map(&block)
-        Try.call(&block.curry.call(@value))
+      def map
+        Try.call { yield @value }
       end
     end
 
