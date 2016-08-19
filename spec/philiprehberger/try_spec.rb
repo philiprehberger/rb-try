@@ -155,7 +155,7 @@ RSpec.describe Philiprehberger::Try do
     end
 
     it 'wraps map errors in Failure' do
-      result = described_class.call { 10 }.map { |_v| raise StandardError, 'map error' }
+      result = described_class.call { 10 }.map { |_v| raise StandardError, 'map error' } # rubocop:disable Lint/UnreachableLoop
       expect(result).to be_a(described_class::Failure)
       expect(result.error.message).to eq('map error')
     end
