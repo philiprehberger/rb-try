@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/philiprehberger/rb-try/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-try/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-try.svg)](https://rubygems.org/gems/philiprehberger-try)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/github/license/philiprehberger/rb-try)](LICENSE)
 
 Concise error handling with fallbacks, chained recovery, and timeout wrapping
 
