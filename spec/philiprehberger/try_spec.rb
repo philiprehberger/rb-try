@@ -174,4 +174,147 @@ RSpec.describe Philiprehberger::Try do
       expect(result.error).to be_a(Timeout::Error)
     end
   end
+
+  describe 'nested or_try chains (3+ deep)' do
+    it 'falls through multiple failures to final success' do
+      result = described_class
+        .call { raise StandardError, 'first' }
+        .or_try { raise StandardError, 'second' }
+        .or_try { raise StandardError, 'third' }
+        .or_try { 'fourth' }
+
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq('fourth')
+    end
+
+    it 'stops at first success in chain' do
+      result = described_class
+        .call { raise StandardError }
+        .or_try { 'recovered' }
+        .or_try { 'never reached' }
+
+      expect(result.value).to eq('recovered')
+    end
+
+    it 'returns Failure when all or_try blocks fail' do
+      result = described_class
+        .call { raise StandardError, 'a' }
+        .or_try { raise StandardError, 'b' }
+        .or_try { raise StandardError, 'c' }
+
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error.message).to eq('c')
+    end
+  end
+
+  describe '#on_error side effect without changing result' do
+    it 'returns Failure unchanged after side effect' do
+      log = []
+      result = described_class.call { raise StandardError, 'err' }
+        .on_error { |e| log << e.message }
+
+      expect(result).to be_a(described_class::Failure)
+      expect(log).to eq(['err'])
+    end
+
+    it 'can chain on_error with or_else' do
+      log = []
+      result = described_class.call { raise StandardError, 'err' }
+        .on_error { |e| log << e.message }
+        .or_else('default')
+
+      expect(result.value).to eq('default')
+      expect(log).to eq(['err'])
+    end
+  end
+
+  describe '#value! on success returns value' do
+    it 'returns the wrapped value directly' do
+      result = described_class.call { 'hello' }
+      expect(result.value!).to eq('hello')
+    end
+
+    it 'returns nil value correctly' do
+      result = described_class.call { nil }
+      expect(result.value!).to be_nil
+    end
+  end
+
+  describe '#map on success and failure' do
+    it 'chains multiple maps on success' do
+      result = described_class.call { 2 }
+        .map { |v| v * 3 }
+        .map { |v| v + 1 }
+
+      expect(result.value).to eq(7)
+    end
+
+    it 'skips map on failure and preserves original error' do
+      result = described_class.call { raise ArgumentError, 'bad' }
+        .map { |v| v * 2 }
+        .map { |v| v + 1 }
+
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error.message).to eq('bad')
+    end
+  end
+
+  describe '#on with specific exception not matching' do
+    it 'does not recover when exception class does not match' do
+      result = described_class.call { raise RuntimeError, 'rt' }
+        .on(ArgumentError) { |_e| 'recovered' }
+
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error).to be_a(RuntimeError)
+    end
+
+    it 'recovers when exception class matches exactly' do
+      result = described_class.call { raise ArgumentError, 'arg' }
+        .on(ArgumentError) { |e| "fixed: #{e.message}" }
+
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq('fixed: arg')
+    end
+
+    it 'matches subclass exceptions' do
+      result = described_class.call { raise ArgumentError, 'sub' }
+        .on(StandardError) { |_e| 'caught' }
+
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq('caught')
+    end
+  end
+
+  describe 'chaining multiple .on handlers' do
+    it 'applies the first matching handler' do
+      result = described_class.call { raise ArgumentError, 'arg' }
+        .on(ArgumentError) { |_e| 'arg handler' }
+        .on(RuntimeError) { |_e| 'rt handler' }
+
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq('arg handler')
+    end
+
+    it 'skips .on on success from prior handler' do
+      result = described_class.call { raise ArgumentError }
+        .on(ArgumentError) { 'fixed' }
+        .on(StandardError) { 'should not run' }
+
+      expect(result.value).to eq('fixed')
+    end
+  end
+
+  describe 'Success is frozen' do
+    it 'freezes the Success result' do
+      result = described_class.call { 'data' }
+      expect(result).to be_frozen
+    end
+  end
+
+  describe 'Failure is frozen' do
+    it 'freezes the Failure result' do
+      result = described_class.call { raise StandardError }
+      expect(result).to be_frozen
+    end
+  end
 end
