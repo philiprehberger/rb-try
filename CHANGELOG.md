@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-03-23
+
+### Fixed
+- Standardize README to match template guide
+
 ## [0.1.2] - 2026-03-22
 
 ### Changed
