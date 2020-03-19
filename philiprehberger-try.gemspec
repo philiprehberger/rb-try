@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Concise error handling with fallbacks, chained recovery, and timeout wrapping'
   spec.description   = 'A tiny utility for concise error handling. Wrap risky expressions with ' \
-                        'Try.call, chain fallbacks with or_else and or_try, handle specific ' \
-                        'exceptions, and add timeout constraints — all without verbose begin/rescue blocks.'
+                       'Try.call, chain fallbacks with or_else and or_try, handle specific ' \
+                       'exceptions, and add timeout constraints — all without verbose begin/rescue blocks.'
   spec.homepage      = 'https://github.com/philiprehberger/rb-try'
   spec.license       = 'MIT'
 

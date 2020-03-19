@@ -89,9 +89,9 @@ RSpec.describe Philiprehberger::Try do
 
     it 'chains multiple or_try calls' do
       result = described_class
-        .call { raise StandardError, 'first' }
-        .or_try { raise StandardError, 'second' }
-        .or_try { 'third' }
+               .call { raise StandardError, 'first' }
+               .or_try { raise StandardError, 'second' }
+               .or_try { 'third' }
 
       expect(result).to be_a(described_class::Success)
       expect(result.value).to eq('third')
@@ -101,7 +101,7 @@ RSpec.describe Philiprehberger::Try do
   describe '#on' do
     it 'matches a specific exception class' do
       result = described_class.call { raise ArgumentError, 'bad arg' }
-        .on(ArgumentError) { |e| "recovered from #{e.message}" }
+                              .on(ArgumentError) { |e| "recovered from #{e.message}" }
 
       expect(result).to be_a(described_class::Success)
       expect(result.value).to eq('recovered from bad arg')
@@ -109,7 +109,7 @@ RSpec.describe Philiprehberger::Try do
 
     it 'ignores non-matching exception class' do
       result = described_class.call { raise 'nope' }
-        .on(ArgumentError) { |_e| 'recovered' }
+                              .on(ArgumentError) { |_e| 'recovered' }
 
       expect(result).to be_a(described_class::Failure)
       expect(result.error).to be_a(RuntimeError)
@@ -126,7 +126,7 @@ RSpec.describe Philiprehberger::Try do
     it 'calls block with error for side effects' do
       captured = nil
       result = described_class.call { raise StandardError, 'oops' }
-        .on_error { |e| captured = e.message }
+                              .on_error { |e| captured = e.message }
 
       expect(captured).to eq('oops')
       expect(result).to be_a(described_class::Failure)
@@ -155,7 +155,7 @@ RSpec.describe Philiprehberger::Try do
     end
 
     it 'wraps map errors in Failure' do
-      result = described_class.call { 10 }.map { |_v| raise StandardError, 'map error' } # rubocop:disable Lint/UnreachableLoop
+      result = described_class.call { 10 }.map { |_v| raise StandardError, 'map error' }
       expect(result).to be_a(described_class::Failure)
       expect(result.error.message).to eq('map error')
     end
@@ -178,10 +178,13 @@ RSpec.describe Philiprehberger::Try do
   describe 'nested or_try chains (3+ deep)' do
     it 'falls through multiple failures to final success' do
       result = described_class
-        .call { raise StandardError, 'first' }
-        .or_try { raise StandardError, 'second' }
-        .or_try { raise StandardError, 'third' }
-        .or_try { 'fourth' }
+               .call { raise StandardError, 'first' }
+               .or_try { raise StandardError, 'second' }
+               .or_try do
+        raise StandardError,
+              'third'
+      end
+               .or_try { 'fourth' }
 
       expect(result).to be_a(described_class::Success)
       expect(result.value).to eq('fourth')
@@ -189,18 +192,21 @@ RSpec.describe Philiprehberger::Try do
 
     it 'stops at first success in chain' do
       result = described_class
-        .call { raise StandardError }
-        .or_try { 'recovered' }
-        .or_try { 'never reached' }
+               .call { raise StandardError }
+               .or_try { 'recovered' }
+               .or_try { 'never reached' }
 
       expect(result.value).to eq('recovered')
     end
 
     it 'returns Failure when all or_try blocks fail' do
       result = described_class
-        .call { raise StandardError, 'a' }
-        .or_try { raise StandardError, 'b' }
-        .or_try { raise StandardError, 'c' }
+               .call { raise StandardError, 'a' }
+               .or_try { raise StandardError, 'b' }
+               .or_try do
+        raise StandardError,
+              'c'
+      end
 
       expect(result).to be_a(described_class::Failure)
       expect(result.error.message).to eq('c')
@@ -211,7 +217,7 @@ RSpec.describe Philiprehberger::Try do
     it 'returns Failure unchanged after side effect' do
       log = []
       result = described_class.call { raise StandardError, 'err' }
-        .on_error { |e| log << e.message }
+                              .on_error { |e| log << e.message }
 
       expect(result).to be_a(described_class::Failure)
       expect(log).to eq(['err'])
@@ -220,8 +226,8 @@ RSpec.describe Philiprehberger::Try do
     it 'can chain on_error with or_else' do
       log = []
       result = described_class.call { raise StandardError, 'err' }
-        .on_error { |e| log << e.message }
-        .or_else('default')
+                              .on_error { |e| log << e.message }
+                              .or_else('default')
 
       expect(result.value).to eq('default')
       expect(log).to eq(['err'])
@@ -243,16 +249,16 @@ RSpec.describe Philiprehberger::Try do
   describe '#map on success and failure' do
     it 'chains multiple maps on success' do
       result = described_class.call { 2 }
-        .map { |v| v * 3 }
-        .map { |v| v + 1 }
+                              .map { |v| v * 3 }
+                              .map { |v| v + 1 }
 
       expect(result.value).to eq(7)
     end
 
     it 'skips map on failure and preserves original error' do
       result = described_class.call { raise ArgumentError, 'bad' }
-        .map { |v| v * 2 }
-        .map { |v| v + 1 }
+                              .map { |v| v * 2 }
+                              .map { |v| v + 1 }
 
       expect(result).to be_a(described_class::Failure)
       expect(result.error.message).to eq('bad')
@@ -261,8 +267,8 @@ RSpec.describe Philiprehberger::Try do
 
   describe '#on with specific exception not matching' do
     it 'does not recover when exception class does not match' do
-      result = described_class.call { raise RuntimeError, 'rt' }
-        .on(ArgumentError) { |_e| 'recovered' }
+      result = described_class.call { raise 'rt' }
+                              .on(ArgumentError) { |_e| 'recovered' }
 
       expect(result).to be_a(described_class::Failure)
       expect(result.error).to be_a(RuntimeError)
@@ -270,7 +276,7 @@ RSpec.describe Philiprehberger::Try do
 
     it 'recovers when exception class matches exactly' do
       result = described_class.call { raise ArgumentError, 'arg' }
-        .on(ArgumentError) { |e| "fixed: #{e.message}" }
+                              .on(ArgumentError) { |e| "fixed: #{e.message}" }
 
       expect(result).to be_a(described_class::Success)
       expect(result.value).to eq('fixed: arg')
@@ -278,7 +284,7 @@ RSpec.describe Philiprehberger::Try do
 
     it 'matches subclass exceptions' do
       result = described_class.call { raise ArgumentError, 'sub' }
-        .on(StandardError) { |_e| 'caught' }
+                              .on(StandardError) { |_e| 'caught' }
 
       expect(result).to be_a(described_class::Success)
       expect(result.value).to eq('caught')
@@ -288,8 +294,8 @@ RSpec.describe Philiprehberger::Try do
   describe 'chaining multiple .on handlers' do
     it 'applies the first matching handler' do
       result = described_class.call { raise ArgumentError, 'arg' }
-        .on(ArgumentError) { |_e| 'arg handler' }
-        .on(RuntimeError) { |_e| 'rt handler' }
+                              .on(ArgumentError) { |_e| 'arg handler' }
+                              .on(RuntimeError) { |_e| 'rt handler' }
 
       expect(result).to be_a(described_class::Success)
       expect(result.value).to eq('arg handler')
@@ -297,8 +303,8 @@ RSpec.describe Philiprehberger::Try do
 
     it 'skips .on on success from prior handler' do
       result = described_class.call { raise ArgumentError }
-        .on(ArgumentError) { 'fixed' }
-        .on(StandardError) { 'should not run' }
+                              .on(ArgumentError) { 'fixed' }
+                              .on(StandardError) { 'should not run' }
 
       expect(result.value).to eq('fixed')
     end
