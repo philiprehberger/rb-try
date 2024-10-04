@@ -55,6 +55,30 @@ module Philiprehberger
       def map
         Try.call { yield @value }
       end
+
+      def flat_map
+        result = yield @value
+        raise TypeError, 'flat_map block must return Success or Failure' unless result.is_a?(Success) || result.is_a?(Failure)
+
+        result
+      rescue TypeError
+        raise
+      rescue StandardError => e
+        Failure.new(e)
+      end
+
+      def recover
+        self
+      end
+
+      def tap
+        yield self
+        self
+      end
+
+      def transform(on_success: nil, on_failure: nil)
+        on_success ? Try.call { on_success.call(@value) } : self
+      end
     end
 
     class Failure
@@ -102,6 +126,23 @@ module Philiprehberger
 
       def map
         self
+      end
+
+      def flat_map
+        self
+      end
+
+      def recover
+        Try.call { yield @error }
+      end
+
+      def tap
+        yield self
+        self
+      end
+
+      def transform(on_success: nil, on_failure: nil)
+        on_failure ? Try.call { on_failure.call(@error) } : self
       end
     end
   end

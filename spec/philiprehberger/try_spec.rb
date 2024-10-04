@@ -323,4 +323,94 @@ RSpec.describe Philiprehberger::Try do
       expect(result).to be_frozen
     end
   end
+
+  describe '#flat_map' do
+    it 'chains operations returning Try results' do
+      result = described_class.call { 10 }
+                              .flat_map { |v| described_class.call { v * 2 } }
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq(20)
+    end
+
+    it 'propagates failure through flat_map' do
+      result = described_class.call { raise StandardError, 'fail' }
+                              .flat_map { |v| described_class.call { v * 2 } }
+      expect(result).to be_a(described_class::Failure)
+    end
+
+    it 'handles flat_map block returning Failure' do
+      result = described_class.call { 10 }
+                              .flat_map { |_v| described_class.call { raise StandardError, 'inner' } }
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error.message).to eq('inner')
+    end
+
+    it 'wraps exceptions in flat_map block as Failure' do
+      result = described_class.call { 10 }
+                              .flat_map { |_v| raise StandardError, 'oops' }
+      expect(result).to be_a(described_class::Failure)
+    end
+  end
+
+  describe '#recover' do
+    it 'ignores recover on Success' do
+      result = described_class.call { 42 }.recover { |_e| 0 }
+      expect(result.value).to eq(42)
+    end
+
+    it 'recovers from Failure' do
+      result = described_class.call { raise StandardError, 'boom' }
+                              .recover { |e| "recovered: #{e.message}" }
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq('recovered: boom')
+    end
+
+    it 'returns Failure if recover block raises' do
+      result = described_class.call { raise StandardError, 'original' }
+                              .recover { |_e| raise StandardError, 'recover failed' }
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error.message).to eq('recover failed')
+    end
+  end
+
+  describe '#tap' do
+    it 'executes side effect on Success without changing result' do
+      captured = nil
+      result = described_class.call { 42 }.tap { |r| captured = r.value }
+      expect(captured).to eq(42)
+      expect(result.value).to eq(42)
+    end
+
+    it 'executes side effect on Failure without changing result' do
+      captured = nil
+      result = described_class.call { raise StandardError, 'err' }
+                              .tap { |r| captured = r.error.message }
+      expect(captured).to eq('err')
+      expect(result).to be_a(described_class::Failure)
+    end
+
+    it 'returns self unchanged' do
+      original = described_class.call { 42 }
+      expect(original.tap { |_| nil }).to equal(original)
+    end
+  end
+
+  describe '#transform' do
+    it 'applies on_success lambda for Success' do
+      result = described_class.call { 10 }
+                              .transform(on_success: ->(v) { v * 2 }, on_failure: lambda(&:message))
+      expect(result.value).to eq(20)
+    end
+
+    it 'applies on_failure lambda for Failure' do
+      result = described_class.call { raise StandardError, 'boom' }
+                              .transform(on_success: ->(v) { v * 2 }, on_failure: ->(e) { "error: #{e.message}" })
+      expect(result.value).to eq('error: boom')
+    end
+
+    it 'returns self when no matching lambda' do
+      result = described_class.call { 42 }.transform(on_failure: lambda(&:message))
+      expect(result.value).to eq(42)
+    end
+  end
 end

@@ -7,6 +7,14 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-01
+
+### Added
+- `#flat_map` for chaining operations that return Try results
+- `#recover` for transforming Failure into Success based on the error
+- `#tap` for executing side effects without changing the result
+- `#transform(on_success:, on_failure:)` for applying case-specific lambdas
+
 ## [0.1.5] - 2026-03-31
 
 ### Added
