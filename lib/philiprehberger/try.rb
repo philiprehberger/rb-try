@@ -71,6 +71,12 @@ module Philiprehberger
         self
       end
 
+      def filter
+        return Failure.new(ArgumentError.new('filter condition not met')) unless yield @value
+
+        self
+      end
+
       def tap
         yield self
         self
@@ -78,6 +84,10 @@ module Philiprehberger
 
       def transform(on_success: nil, on_failure: nil)
         on_success ? Try.call { on_success.call(@value) } : self
+      end
+
+      def deconstruct_keys(_keys)
+        { success: true, value: @value }
       end
     end
 
@@ -136,6 +146,10 @@ module Philiprehberger
         Try.call { yield @error }
       end
 
+      def filter
+        self
+      end
+
       def tap
         yield self
         self
@@ -143,6 +157,10 @@ module Philiprehberger
 
       def transform(on_success: nil, on_failure: nil)
         on_failure ? Try.call { on_failure.call(@error) } : self
+      end
+
+      def deconstruct_keys(_keys)
+        { success: false, error: @error }
       end
     end
   end

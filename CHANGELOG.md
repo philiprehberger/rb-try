@@ -7,6 +7,12 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-09
+
+### Added
+- `#filter` converts `Success` to `Failure` when predicate returns falsy
+- `#deconstruct_keys` on `Success` and `Failure` for Ruby 3.x `case/in` pattern matching
+
 ## [0.2.0] - 2026-04-01
 
 ### Added
@@ -52,3 +58,12 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `.on_error` for failure side effects
 - `.map` for transforming success values
 - Optional timeout support
+
+[0.3.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.3.0
+[0.2.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.2.0
+[0.1.5]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.5
+[0.1.4]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.4
+[0.1.3]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.3
+[0.1.2]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.2
+[0.1.1]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.1
+[0.1.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.0
