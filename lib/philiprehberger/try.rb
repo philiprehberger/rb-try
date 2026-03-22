@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "timeout"
+require 'timeout'
 require_relative "try/version"
 
 module Philiprehberger
