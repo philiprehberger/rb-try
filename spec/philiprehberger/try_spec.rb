@@ -108,7 +108,7 @@ RSpec.describe Philiprehberger::Try do
     end
 
     it 'ignores non-matching exception class' do
-      result = described_class.call { raise RuntimeError, 'nope' }
+      result = described_class.call { raise 'nope' }
         .on(ArgumentError) { |_e| 'recovered' }
 
       expect(result).to be_a(described_class::Failure)
