@@ -18,15 +18,9 @@ Add to your Gemfile:
 gem "philiprehberger-try"
 ```
 
-Then run:
-
-```sh
-bundle install
-```
-
 Or install directly:
 
-```sh
+```bash
 gem install philiprehberger-try
 ```
 
@@ -136,7 +130,7 @@ result.error    # => #<Timeout::Error: execution expired>
 
 ## Development
 
-```sh
+```bash
 bundle install
 bundle exec rspec
 bundle exec rubocop
@@ -144,4 +138,4 @@ bundle exec rubocop
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT
