@@ -5,9 +5,9 @@ require_relative 'try/version'
 
 module Philiprehberger
   module Try
-    def self.call(timeout: nil)
+    def self.call(timeout: nil, &block)
       value = if timeout
-                Timeout.timeout(timeout) { yield }
+                Timeout.timeout(timeout, &block)
               else
                 yield
               end
@@ -85,8 +85,8 @@ module Philiprehberger
         Success.new(default)
       end
 
-      def or_try(&block)
-        Try.call(&block)
+      def or_try(&)
+        Try.call(&)
       end
 
       def on(exception_class, &block)
