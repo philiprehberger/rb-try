@@ -101,6 +101,40 @@ result = Philiprehberger::Try.call { File.read("data.json") }
 result.value # => parsed value or nil if any step failed
 ```
 
+### Chaining with `flat_map`
+
+Chain operations that return Try results without double-wrapping:
+
+```ruby
+result = Philiprehberger::Try.call { "42" }
+  .flat_map { |v| Philiprehberger::Try.call { Integer(v) } }
+  .flat_map { |v| Philiprehberger::Try.call { v * 2 } }
+
+result.value # => 84
+```
+
+### Recovering from errors
+
+Transform a failure into a success based on the error:
+
+```ruby
+result = Philiprehberger::Try.call { raise ArgumentError, "bad input" }
+  .recover { |e| "default value" }
+
+result.value # => "default value"
+```
+
+### Side effects with `tap`
+
+Execute side effects without changing the result:
+
+```ruby
+result = Philiprehberger::Try.call { 42 }
+  .tap { |r| puts "Got: #{r.value}" }
+
+result.value # => 42
+```
+
 ### Timeout support
 
 Add a timeout constraint to any operation:
@@ -127,6 +161,10 @@ result.error    # => #<Timeout::Error: execution expired>
 | `#on(ExceptionClass) { block }` | Returns self | If error matches, returns `Try.call { block }` |
 | `#on_error { block }` | Returns self | Calls block for side effect, returns self |
 | `#map { block }` | Wraps block result in new `Try.call` | Returns self |
+| `#flat_map { block }` | Chains block returning Try | Returns self |
+| `#recover { block }` | Returns self | Wraps block result in `Try.call` |
+| `#tap { block }` | Calls block, returns self | Calls block, returns self |
+| `#transform(on_success:, on_failure:)` | Applies `on_success` lambda | Applies `on_failure` lambda |
 
 ## Development
 
