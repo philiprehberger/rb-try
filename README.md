@@ -135,6 +135,33 @@ result = Philiprehberger::Try.call { 42 }
 result.value # => 42
 ```
 
+### Filtering values
+
+Convert a `Success` to `Failure` when the value does not satisfy a predicate:
+
+```ruby
+result = Philiprehberger::Try.call { parse_age(input) }
+  .filter { |v| v >= 0 }
+  .or_else(0)
+
+result.value # => parsed age, or 0 if negative or parse failed
+```
+
+A failed filter produces a `Failure` wrapping `ArgumentError("filter condition not met")`.
+
+### Pattern matching
+
+`Success` and `Failure` support Ruby 3.x `case/in` pattern matching:
+
+```ruby
+case Philiprehberger::Try.call { Integer(input) }
+in { success: true, value: Integer => v }
+  puts "Parsed: #{v}"
+in { success: false, error: ArgumentError => e }
+  puts "Bad input: #{e.message}"
+end
+```
+
 ### Timeout support
 
 Add a timeout constraint to any operation:
@@ -163,6 +190,8 @@ result.error    # => #<Timeout::Error: execution expired>
 | `#map { block }` | Wraps block result in new `Try.call` | Returns self |
 | `#flat_map { block }` | Chains block returning Try | Returns self |
 | `#recover { block }` | Returns self | Wraps block result in `Try.call` |
+| `#filter { block }` | Returns self if truthy, `Failure` if falsy | Returns self |
+| `#deconstruct_keys(keys)` | `{ success: true, value: }` | `{ success: false, error: }` |
 | `#tap { block }` | Calls block, returns self | Calls block, returns self |
 | `#transform(on_success:, on_failure:)` | Applies `on_success` lambda | Applies `on_failure` lambda |
 

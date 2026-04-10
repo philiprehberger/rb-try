@@ -395,6 +395,80 @@ RSpec.describe Philiprehberger::Try do
     end
   end
 
+  describe '#filter' do
+    it 'returns self when predicate is truthy' do
+      result = described_class.call { 42 }.filter { |v| v > 0 }
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq(42)
+    end
+
+    it 'returns Failure when predicate is falsy' do
+      result = described_class.call { -1 }.filter { |v| v > 0 }
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error).to be_a(ArgumentError)
+      expect(result.error.message).to eq('filter condition not met')
+    end
+
+    it 'returns self on Failure without calling block' do
+      called = false
+      result = described_class.call { raise StandardError, 'boom' }
+                              .filter { |_v| called = true }
+      expect(called).to be false
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error.message).to eq('boom')
+    end
+
+    it 'chains with map' do
+      result = described_class.call { 10 }
+                              .filter(&:even?)
+                              .map { |v| v * 2 }
+      expect(result.value).to eq(20)
+    end
+
+    it 'short-circuits map after failed filter' do
+      result = described_class.call { 3 }
+                              .filter(&:even?)
+                              .map { |v| v * 2 }
+      expect(result).to be_a(described_class::Failure)
+    end
+  end
+
+  describe '#deconstruct_keys (pattern matching)' do
+    it 'destructures Success' do
+      result = described_class.call { 42 }
+      expect(result.deconstruct_keys(nil)).to eq({ success: true, value: 42 })
+    end
+
+    it 'destructures Failure' do
+      result = described_class.call { raise ArgumentError, 'bad' }
+      hash = result.deconstruct_keys(nil)
+      expect(hash[:success]).to be false
+      expect(hash[:error]).to be_a(ArgumentError)
+    end
+
+    it 'works with case/in on Success' do
+      result = described_class.call { 42 }
+      matched = case result
+                in { success: true, value: Integer => v }
+                  v
+                else
+                  nil
+                end
+      expect(matched).to eq(42)
+    end
+
+    it 'works with case/in on Failure' do
+      result = described_class.call { raise ArgumentError, 'bad' }
+      matched = case result
+                in { success: false, error: ArgumentError => e }
+                  e.message
+                else
+                  nil
+                end
+      expect(matched).to eq('bad')
+    end
+  end
+
   describe '#transform' do
     it 'applies on_success lambda for Success' do
       result = described_class.call { 10 }
