@@ -162,6 +162,30 @@ in { success: false, error: ArgumentError => e }
 end
 ```
 
+### Combining results with `all`
+
+Combine multiple Try results into one. Returns `Success` with an array of all values, or the first `Failure`:
+
+```ruby
+a = Philiprehberger::Try.call { Integer("42") }
+b = Philiprehberger::Try.call { Integer("7") }
+
+result = Philiprehberger::Try.all(a, b)
+result.value # => [42, 7]
+```
+
+Also accepts lambdas, evaluated lazily with short-circuit on first failure:
+
+```ruby
+result = Philiprehberger::Try.all(
+  -> { Integer("42") },
+  -> { Integer("nope") },
+  -> { Integer("99") }   # never called
+)
+result.failure? # => true
+result.error    # => #<ArgumentError: invalid value for Integer(): "nope">
+```
+
 ### Timeout support
 
 Add a timeout constraint to any operation:
@@ -178,6 +202,7 @@ result.error    # => #<Timeout::Error: execution expired>
 | Method | On Success | On Failure |
 |---|---|---|
 | `Try.call(timeout: nil) { block }` | Returns `Success` wrapping block result | Returns `Failure` wrapping exception |
+| `Try.all(*items)` | `Success` with array of values if all succeed | First `Failure` encountered |
 | `#value` | Returns the wrapped value | Returns `nil` |
 | `#value!` | Returns the wrapped value | Raises the stored exception |
 | `#success?` | `true` | `false` |

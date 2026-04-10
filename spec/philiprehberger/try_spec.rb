@@ -487,4 +487,56 @@ RSpec.describe Philiprehberger::Try do
       expect(result.value).to eq(42)
     end
   end
+
+  describe '.all' do
+    it 'returns Success with array of values when all succeed' do
+      a = described_class.call { 1 }
+      b = described_class.call { 2 }
+      c = described_class.call { 3 }
+      result = described_class.all(a, b, c)
+      expect(result.success?).to be true
+      expect(result.value).to eq([1, 2, 3])
+    end
+
+    it 'returns the first Failure when one fails' do
+      a = described_class.call { 1 }
+      b = described_class.call { raise 'boom' }
+      c = described_class.call { 3 }
+      result = described_class.all(a, b, c)
+      expect(result.failure?).to be true
+      expect(result.error.message).to eq('boom')
+    end
+
+    it 'accepts lambdas and evaluates them lazily' do
+      called = []
+      result = described_class.all(
+        lambda {
+          called << 1
+          'a'
+        },
+        lambda {
+          called << 2
+          raise 'fail'
+        },
+        lambda {
+          called << 3
+          'c'
+        }
+      )
+      expect(result.failure?).to be true
+      expect(called).to eq([1, 2])
+    end
+
+    it 'accepts a mix of Try objects and lambdas' do
+      a = described_class.call { 10 }
+      result = described_class.all(a, -> { 20 })
+      expect(result.value).to eq([10, 20])
+    end
+
+    it 'returns Success with empty array when given no arguments' do
+      result = described_class.all
+      expect(result.success?).to be true
+      expect(result.value).to eq([])
+    end
+  end
 end

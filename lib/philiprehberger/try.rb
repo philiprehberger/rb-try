@@ -16,6 +16,25 @@ module Philiprehberger
       Failure.new(e)
     end
 
+    # Combine multiple Try results or callables into a single result.
+    #
+    # Accepts any mix of Success, Failure, Proc, or lambda objects.
+    # Procs/lambdas are evaluated lazily via Try.call and short-circuit
+    # on the first failure.
+    #
+    # @param items [Array<Success, Failure, Proc>] Try results or callables
+    # @return [Success, Failure] Success wrapping an array of values, or the first Failure
+    def self.all(*items)
+      values = []
+      items.each do |item|
+        result = item.is_a?(Proc) ? call(&item) : item
+        return result if result.failure?
+
+        values << result.value
+      end
+      Success.new(values)
+    end
+
     class Success
       attr_reader :value
 
