@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-09
+
+### Added
+- `Try.all(*items)` combinator for combining multiple Try results or callables into a single Success/Failure
+
 ## [0.3.0] - 2026-04-09
 
 ### Added
