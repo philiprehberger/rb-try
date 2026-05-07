@@ -124,6 +124,21 @@ result = Philiprehberger::Try.call { raise ArgumentError, "bad input" }
 result.value # => "default value"
 ```
 
+### Mapping Errors
+
+Transform a `Failure`'s error into a different exception without recovering:
+
+```ruby
+require 'philiprehberger/try'
+
+result = Philiprehberger::Try.call { File.read('missing.txt') }
+                             .map_error { |e| MyError.new("read failed: #{e.message}") }
+```
+
+`Success#map_error` is a no-op. On `Failure`, the block return is wrapped in a new `Failure`. If
+the block returns a non-Exception value, it is wrapped in `RuntimeError` so that `Failure#error`
+always exposes an Exception.
+
 ### Side effects with `tap`
 
 Execute side effects without changing the result:
@@ -215,6 +230,7 @@ result.error    # => #<Timeout::Error: execution expired>
 | `#map { block }` | Wraps block result in new `Try.call` | Returns self |
 | `#flat_map { block }` | Chains block returning Try | Returns self |
 | `#recover { block }` | Returns self | Wraps block result in `Try.call` |
+| `#map_error { block }` | Returns self | Wraps block result (or `RuntimeError`) in new `Failure` |
 | `#filter { block }` | Returns self if truthy, `Failure` if falsy | Returns self |
 | `#deconstruct_keys(keys)` | `{ success: true, value: }` | `{ success: false, error: }` |
 | `#tap { block }` | Calls block, returns self | Calls block, returns self |

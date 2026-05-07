@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-07
+
+### Added
+- `Success#map_error` and `Failure#map_error` — declaratively transform a `Failure`'s error into a different exception. `Success#map_error` is a no-op. Non-Exception block return values are wrapped in `RuntimeError` to preserve the `Failure#error` invariant.
+
 ## [0.4.0] - 2026-04-09
 
 ### Added
@@ -64,6 +69,8 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `.map` for transforming success values
 - Optional timeout support
 
+[0.5.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.5.0
+[0.4.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.4.0
 [0.3.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.3.0
 [0.2.0]: https://github.com/philiprehberger/rb-try/releases/tag/v0.2.0
 [0.1.5]: https://github.com/philiprehberger/rb-try/releases/tag/v0.1.5

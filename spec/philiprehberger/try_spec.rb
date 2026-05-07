@@ -373,6 +373,38 @@ RSpec.describe Philiprehberger::Try do
     end
   end
 
+  describe '#map_error' do
+    it 'returns self on Success' do
+      result = described_class.call { 42 }.map_error { |_e| RuntimeError.new('x') }
+      expect(result).to be_a(described_class::Success)
+      expect(result.value).to eq(42)
+    end
+
+    it 'transforms the error on Failure' do
+      result = described_class.call { raise IOError, 'boom' }
+                              .map_error { |e| RuntimeError.new(e.message) }
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error).to be_a(RuntimeError)
+      expect(result.error.message).to eq('boom')
+    end
+
+    it 'chains correctly with map (map skipped on Failure)' do
+      result = described_class.call { raise IOError, 'a' }
+                              .map_error { |e| RuntimeError.new(e.message) }
+                              .map { |v| v + 1 }
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error).to be_a(RuntimeError)
+      expect(result.error.message).to eq('a')
+    end
+
+    it 'wraps non-Exception block return in RuntimeError' do
+      result = described_class.call { raise 'a' }.map_error { |_| 'just a string' }
+      expect(result).to be_a(described_class::Failure)
+      expect(result.error).to be_a(RuntimeError)
+      expect(result.error.message).to eq('just a string')
+    end
+  end
+
   describe '#tap' do
     it 'executes side effect on Success without changing result' do
       captured = nil

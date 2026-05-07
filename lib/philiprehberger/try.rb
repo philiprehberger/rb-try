@@ -90,6 +90,10 @@ module Philiprehberger
         self
       end
 
+      def map_error
+        self
+      end
+
       def filter
         return Failure.new(ArgumentError.new('filter condition not met')) unless yield @value
 
@@ -163,6 +167,12 @@ module Philiprehberger
 
       def recover
         Try.call { yield @error }
+      end
+
+      def map_error
+        new_error = yield @error
+        new_error = RuntimeError.new(new_error.to_s) unless new_error.is_a?(Exception)
+        Failure.new(new_error)
       end
 
       def filter
